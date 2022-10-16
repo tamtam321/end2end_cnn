@@ -9,8 +9,11 @@ import matplotlib.pyplot as plt
 from mlxtend.plotting import plot_confusion_matrix
 from sklearn.metrics import confusion_matrix
 
+# bizonyos warning vagy üzenet elfolytására van
 # import os
 # os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
+
+# TF_GPU_ALLOCATOR=cuda_malloc_async
 
 subject_numb = 109
 record_numb = 14    # 12 task + 2 baseline
@@ -297,7 +300,7 @@ epochs = 30
 def startNN():
 
     # Lekérem az alanyok MI adatát.
-    for i in range(subject_numb):
+    for i in range(50):
         getSubjectImaginaryTasks(i + 1)
 
     block = 0
@@ -313,8 +316,8 @@ def startNN():
     # Crossvalidation ->  80% learning, 20% test
     # 5 block
     while block < 5:
-        lower_bound = block * 20
-        upper_bound = block * 20 + 20
+        lower_bound = block * 10
+        upper_bound = block * 10 + 10
 
         learning_data_set, test_data_set = getLearningTestDataSet(lower_bound, upper_bound)
 
@@ -345,7 +348,7 @@ def startNN():
         # tanítás
         model.fit(np.expand_dims(learning_data_set[0], axis=-1), np.expand_dims(learning_data_set[1], axis=-1), epochs=epochs,
                   batch_size=batch_size, verbose=2, validation_split=0.2,
-                  callbacks=[tf.keras.callbacks.EarlyStopping(monitor="val_accuracy", patience=1, restore_best_weights=True)], shuffle=True)
+                  callbacks=[tf.keras.callbacks.EarlyStopping(monitor="val_accuracy", patience=10, restore_best_weights=True)], shuffle=True)
 
         # model.fit(np.expand_dims(learning_data_set[0], axis=-1), np.expand_dims(learning_data_set[1], axis=-1),
         #           epochs=epochs,
