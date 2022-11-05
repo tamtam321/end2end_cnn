@@ -9,11 +9,11 @@ import matplotlib.pyplot as plt
 from mlxtend.plotting import plot_confusion_matrix
 from sklearn.metrics import confusion_matrix
 
-# bizonyos warning vagy üzenet elfolytására van
+#bizonyos warning vagy üzenet elfolytására van
 # import os
 # os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 
-# TF_GPU_ALLOCATOR=cuda_malloc_async
+#TF_GPU_ALLOCATOR=cuda_malloc_async
 
 subject_numb = 109
 record_numb = 14    # 12 task + 2 baseline
@@ -70,7 +70,7 @@ class_names = ["Rest", "LFist", "RFist", "BFists", "BFeet"]
 # subject_dict-hez feltöltöm a jelenlegi alany eventjeit.
 def loadEventsToSub(raw, events, event_id, event_1, event_2, event_3):
     # Epochs extracted from a Raw instance.
-    tmp_epochs = mne.Epochs(raw, events, event_id=event_id, tmin=-1, tmax=5, baseline=None)  # -1 -> 5, számít hány másodpercet mérünk, mert azzal is romolhat az eredmény, ha akár 1s-et is kihagyunk.
+    tmp_epochs = mne.Epochs(raw, events, event_id=event_id, tmin=0, tmax=4, baseline=None)  # -1 -> 5, számít hány másodpercet mérünk, mert azzal is romolhat az eredmény, ha akár 1s-et is kihagyunk.
 
     if subject_dict.get(event_1) is None:
         subject_dict[event_1] = tmp_epochs[event_1].get_data()
@@ -290,6 +290,10 @@ def confusionMatrix(test_label, test_data_pred):
     plt.show()
 
 
+def clearSubjectMiList():
+    subjects_imaginary_tasks.clear()
+
+
 # tanításhoz
 batch_size = 16
 epochs = 30
@@ -316,6 +320,10 @@ def startNN():
     # Crossvalidation ->  80% learning, 20% test
     # 5 block
     while block < 5:
+        #Lekérem az alanyok MI adatát.
+        # for i in range(50):
+        #     getSubjectImaginaryTasks(i + 1)
+
         lower_bound = block * 10
         upper_bound = block * 10 + 10
 
@@ -335,7 +343,7 @@ def startNN():
         model.add(layers.Conv2D(40, (64, 1), strides=(1, 1), padding="valid", activation="relu"))  # spatial conv # input_shape=(64, 321, 40) - (NEEG, N, 40)
         model.add(layers.AvgPool2D(pool_size=(1, 15), strides=(1, 1), padding="valid"))  # pooling layer # input_shape=(1, 321, 40) - (1, N, 40)
         model.add(layers.Flatten())  # flatten
-        model.add(layers.Dense(64, activation="relu"))
+        model.add(layers.Dense(64, activation="relu"))  # activation func
         model.add(layers.Dense(5))
 
         # loss és optimizer
@@ -368,6 +376,9 @@ def startNN():
             test_data_np_for_predict = np.append(test_data_np_for_predict, model.predict(np.expand_dims(test_data_set[0], axis=-1)), axis=0)
 
         block += 1
+
+        # Clear subject list, just keep those which you are working on currently, to save up memories!
+        #clearSubjectMiList()
 
     test_labels_concatenated = np.concatenate(test_labels_np, axis=0)
 
