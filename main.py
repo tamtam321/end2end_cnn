@@ -70,7 +70,7 @@ class_names = ["Rest", "LFist", "RFist", "BFists", "BFeet"]
 # subject_dict-hez feltöltöm a jelenlegi alany eventjeit.
 def loadEventsToSub(raw, events, event_id, event_1, event_2, event_3):
     # Epochs extracted from a Raw instance.
-    tmp_epochs = mne.Epochs(raw, events, event_id=event_id, tmin=0, tmax=4, baseline=None)  # -1 -> 5, számít hány másodpercet mérünk, mert azzal is romolhat az eredmény, ha akár 1s-et is kihagyunk.
+    tmp_epochs = mne.Epochs(raw, events, event_id=event_id, tmin=0, tmax=2, baseline=None)  # -1 -> 5, számít hány másodpercet mérünk, mert azzal is romolhat az eredmény, ha akár 1s-et is kihagyunk.
 
     if subject_dict.get(event_1) is None:
         subject_dict[event_1] = tmp_epochs[event_1].get_data()
@@ -304,7 +304,7 @@ epochs = 30
 def startNN():
 
     # Lekérem az alanyok MI adatát.
-    for i in range(50):
+    for i in range(105):
         getSubjectImaginaryTasks(i + 1)
 
     block = 0
@@ -324,8 +324,8 @@ def startNN():
         # for i in range(50):
         #     getSubjectImaginaryTasks(i + 1)
 
-        lower_bound = block * 10
-        upper_bound = block * 10 + 10
+        lower_bound = block * 20
+        upper_bound = block * 20 + 20
 
         learning_data_set, test_data_set = getLearningTestDataSet(lower_bound, upper_bound)
 
