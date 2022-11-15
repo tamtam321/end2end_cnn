@@ -91,7 +91,7 @@ def loadEventsToSub(raw, events, event_id, event_1, event_2, event_3):
 # **
 # Megadja az adott alany elképzelt cselekvéseinek rekordját.*#
 def getSubjectImaginaryTasks(subject_idx):
-    file_path = []  # Fájl útvonala.
+    file_path = []  # .edf fájlok útvonala.
 
     for record_idx in range(record_numb):
         file_path.append(f'files/S{subject_idx:03}/S{subject_idx:03}R{(record_idx + 1):02d}.edf')
@@ -320,9 +320,6 @@ def startNN():
     # Crossvalidation ->  80% learning, 20% test
     # 5 block
     while block < 5:
-        #Lekérem az alanyok MI adatát.
-        # for i in range(50):
-        #     getSubjectImaginaryTasks(i + 1)
 
         lower_bound = block * 20
         upper_bound = block * 20 + 20
@@ -358,10 +355,8 @@ def startNN():
                   batch_size=batch_size, verbose=2, validation_split=0.2,
                   callbacks=[tf.keras.callbacks.EarlyStopping(monitor="val_accuracy", patience=10, restore_best_weights=True)], shuffle=True)
 
-        # model.fit(np.expand_dims(learning_data_set[0], axis=-1), np.expand_dims(learning_data_set[1], axis=-1),
-        #           epochs=epochs,
-        #           batch_size=batch_size, verbose=2, validation_split=0.2,
-        #           shuffle=True)
+        #SÚLY KIMENTÉS!!!!! [PLAN]
+        #model.save_weights("útvonal és fájlnév")
 
         # kiértékelés
         _, acc = model.evaluate(np.expand_dims(test_data_set[0], axis=-1),
@@ -383,11 +378,25 @@ def startNN():
     test_labels_concatenated = np.concatenate(test_labels_np, axis=0)
 
     # Confusion Matrix
+    # pickle -> numpy lementeni!!!!
+    # hogy néz ki???
     confusionMatrix(test_labels_concatenated,
                     test_data_np_for_predict)
 
     # végső teszt eredmény
     test_accuracy = np.mean(accuracies)
+
+    file = open("result.txt", "a")
+    file.write("Confusion Matrix Label: \n")
+    file2 = open("result.txt", "wb")
+    np.save(file2, test_labels_concatenated)
+    file.write("\nConfusion Matrix Numpy Data for Prediction: \n")
+    np.save(file2, test_data_np_for_predict)
+    file.write("\nTESZT HALMAZOK PONTOSSÁGA: " + str(accuracies) + "\n")
+    file.write("EGÉSZ TESZT ÁTLAG: " + str(test_accuracy) + "\n")
+    file.write("_____________________________________________________________________________________________________\n")
+    file.close()
+    file2.close()
 
     print("!!!!!!!!!!!!!!!_TESZT HALMAZOK PONTOSSÁGA_!!!!!!!!!!!!: ", accuracies)
     print("!!!!!!!!!!!!!!!_EGÉSZ TESZT ÁTLAG_!!!!!!!!!!!!: ", test_accuracy)
