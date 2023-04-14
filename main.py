@@ -113,7 +113,7 @@ def getSubjectImaginaryTasks(subject_idx):
             tmp_events, _ = mne.events_from_annotations(raw)    # eventek
 
             # 4, 8 és 12-es id-jú rekord tartalmazza a rest, left, right fist eventeket.
-            # A maradék, ami az 6, 10, 14-as id-jú rekord tartalmazza a rest, both fists, feet eventeket.
+            # A maradék, ami a 6, 10, 14-es id-jú rekord tartalmazza a rest, both fists, feet eventeket.
             # A file_path-ban megvizsgálom az id-ját a rekordnak.
             if file_path[s][-6:-4] == '04' or file_path[s][-6:-4] == '08' or \
                     file_path[s][-6:-4] == '12':
@@ -295,7 +295,8 @@ def clearSubjectMiList():
 
 
 # tanításhoz
-batch_size = 16
+#batch_size = 16
+batch_size = 32
 epochs = 30
 
 
@@ -304,7 +305,8 @@ epochs = 30
 def startNN():
 
     # Lekérem az alanyok MI adatát.
-    for i in range(105):
+    # Össz van 109 alany, de 105-öt használok, mert 4 más frekvencián lett rögzítve, így nem egységes a többivel.
+    for i in range(50):
         getSubjectImaginaryTasks(i + 1)
 
     block = 0
@@ -321,8 +323,13 @@ def startNN():
     # 5 block
     while block < 5:
 
-        lower_bound = block * 20
-        upper_bound = block * 20 + 20
+        # 105 alany felosztás
+        # lower_bound = block * 20
+        # upper_bound = block * 20 + 20
+
+        # 50 alany felosztás
+        lower_bound = block * 10
+        upper_bound = block * 10 + 10
 
         learning_data_set, test_data_set = getLearningTestDataSet(lower_bound, upper_bound)
 
@@ -335,8 +342,11 @@ def startNN():
         # 1 epoch -> 1 eventet tartalmaz, 4s, 64 csatornán figyelve, input hossza 321 -> 4/321 ~ 12ms
         # Első layernél megadjuk, hogy mekkora lesz az input (64x321x1) és onnantól majd első layer outputja (64x321x40) megy tovább a kövi layer inputjaként ...stb.
         model = keras.models.Sequential()
-        model.add(layers.Conv2D(40, (1, 30), strides=(1, 1), padding="same",
-                                activation="relu", input_shape=(64, 321, 1)))  # temporal convolution (64, 321, 1) - (NEEG, N, 1)
+        model.add(layers.Conv2D(40, (1, 30), strides=(1, 1), padding="same", activation="relu", input_shape=(64, 321, 1)))  # temporal convolution (64, 321, 1) - (NEEG, N, 1)
+
+        model.add(layers.Conv2D(10, (1, 60), strides=(1, 1), padding="same", activation="relu"))
+        model.add(layers.Conv2D(10, (1, 60), strides=(1, 1), padding="same", activation="relu"))
+
         model.add(layers.Conv2D(40, (64, 1), strides=(1, 1), padding="valid", activation="relu"))  # spatial conv # input_shape=(64, 321, 40) - (NEEG, N, 40)
         model.add(layers.AvgPool2D(pool_size=(1, 15), strides=(1, 1), padding="valid"))  # pooling layer # input_shape=(1, 321, 40) - (1, N, 40)
         model.add(layers.Flatten())  # flatten
